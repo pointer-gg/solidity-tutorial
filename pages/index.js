@@ -1,5 +1,6 @@
 import { ethers } from "ethers";
 import { useState, useEffect } from "react";
+import Keyboard from "../components/keyboard";
 import PrimaryButton from "../components/primary-button";
 import abi from "../utils/Keyboards.json"
 
@@ -67,7 +68,15 @@ export default function Home() {
       return <PrimaryButton onClick={connectAccount}>Connect MetaMask Wallet</PrimaryButton>
     }
 
-    return <p>{JSON.stringify(keyboards)}</p>
+    return (
+      <div className="grid grid-cols-2 gap-2">
+        {keyboards.map(
+          ([kind, isPBT, filter, owner], i) => (
+            <Keyboard key={i} kind={kind} isPBT={isPBT} filter={filter} />
+          )
+        )}
+      </div>
+    )
   }
 
   return (

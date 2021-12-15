@@ -1,5 +1,6 @@
 import { ethers } from "ethers";
 import { useState, useEffect } from "react";
+import Keyboard from "../components/keyboard";
 import PrimaryButton from "../components/primary-button";
 import abi from "../utils/Keyboards.json"
 
@@ -80,7 +81,8 @@ export default function Create() {
     }
 
     return (
-      <form className="mt-8 flex flex-col flex-shrink basis-8 gap-y-6">
+      <div className="flex flex-col gap-y-8">
+      <form className="mt-8 flex flex-col gap-y-6">
         <div>
           <label htmlFor="keyboard-type" className="block text-sm font-medium text-gray-700">
             Keyboard Type
@@ -126,6 +128,7 @@ export default function Create() {
             onChange={(e) => { setFilter(e.target.value) }}
             value={filter}
           >
+            <option value="">None</option>
             <option value="sepia">Sepia</option>
             <option value="grayscale">Grayscale</option>
             <option value="invert">Invert</option>
@@ -138,6 +141,12 @@ export default function Create() {
           {mining? "Creating..." : "Create Keyboard"}
         </PrimaryButton>
       </form>
+
+      <div>
+        <h2 className="block text-lg font-medium text-gray-700">Preview</h2>
+        <Keyboard kind={keyboardKind} isPBT={isPBT} filter={filter} />
+      </div>
+      </div>
     )
   }
 
