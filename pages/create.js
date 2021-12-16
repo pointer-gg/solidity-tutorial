@@ -1,15 +1,13 @@
-import { ethers } from "ethers";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Keyboard from "../components/keyboard";
 import PrimaryButton from "../components/primary-button";
-import { contractAddress } from "../utils/contractAddress";
-import abi from "../utils/Keyboards.json"
 import Router from 'next/router'
+import useEthereum from "../hooks/useEthereum";
+import useKeyboardsContract from "../hooks/useKeyboardsContract";
 
 export default function Create() {
-
-  const [ethereum, setEthereum] = useState(undefined);
-  const [connectedAccount, setConnectedAccount] = useState(undefined);
+  const { ethereum, connectedAccount, connectAccount } = useEthereum();
+  const keyboardsContract = useKeyboardsContract(ethereum)
 
   const [keyboardKind, setKeyboardKind] = useState(0)
   const [isPBT, setIsPBT] = useState(false)
@@ -17,61 +15,20 @@ export default function Create() {
 
   const [mining, setMining] = useState(false)
 
-  const contractABI = abi.abi;
-
-  const handleAccounts = (accounts) => {
-    if (accounts.length > 0) {
-      const account = accounts[0];
-      console.log('We have an authorized account: ', account);
-      setConnectedAccount(account);
-    } else {
-      console.log("No authorized accounts yet")
-    }
-  };
-
-  const getConnectedAccount = async () => {
-    if (window.ethereum) {
-      setEthereum(window.ethereum);
-    }
-
-    if (ethereum) {
-      const accounts = await ethereum.request({ method: 'eth_accounts' });
-      handleAccounts(accounts);
-    }
-  };
-  useEffect(() => getConnectedAccount(), []);
-
-  const connectAccount = async () => {
-    if (!ethereum) {
-      console.error('Ethereum object is required to connect an account');
-      return;
-    }
-
-    const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
-    handleAccounts(accounts);
-  };
-
   const submitCreate = async (e) => {
     e.preventDefault();
 
-    if (!ethereum) {
-      console.error('Ethereum object is required to create a keyboard');
-      return;
+    if (ethereum && connectedAccount && keyboardsContract) {
+      const createTxn = await keyboardsContract.create(keyboardKind, isPBT, filter)
+      setMining(true);
+      console.log('Create transaction started...', createTxn.hash)
+
+      await createTxn.wait();
+      setMining(false);
+      console.log('Created keyboard!', createTxn.hash);
+
+      Router.push('/');
     }
-
-    const provider = new ethers.providers.Web3Provider(ethereum);
-    const signer = provider.getSigner();
-    const keyboardsContract = new ethers.Contract(contractAddress, contractABI, signer);
-
-    const createTxn = await keyboardsContract.create(keyboardKind, isPBT, filter)
-    setMining(true);
-    console.log('Create transaction started...', createTxn.hash)
-
-    await createTxn.wait();
-    setMining(false);
-    console.log('Created keyboard!', createTxn.hash);
-
-    Router.push('/')
   }
 
   const renderCreateForm = () => {
