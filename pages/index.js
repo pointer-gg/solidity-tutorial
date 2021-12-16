@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { ethers } from "ethers";
 import Keyboard from "../components/keyboard";
 import PrimaryButton from "../components/primary-button";
 import { UserCircleIcon } from "@heroicons/react/solid"
@@ -6,6 +7,8 @@ import TipButton from "../components/tip-button";
 import useEthereum from "../hooks/useEthereum";
 import useKeyboardsContract from "../hooks/useKeyboardsContract";
 import Footer from "../components/footer";
+import { toast } from "react-hot-toast";
+import addressesEqual from "../utils/addressesEqual";
 
 export default function Home() {
   const { ethereum, connectedAccount, connectAccount } = useEthereum();
@@ -14,13 +17,32 @@ export default function Home() {
   const [keyboards, setKeyboards] = useState([])
 
   const getKeyboards = async () => {
-    if (ethereum && connectedAccount && keyboardsContract) {
+    if (ethereum && keyboardsContract) {
       const keyboards = await keyboardsContract.getKeyboards();
       console.log('Retrieved keyboards...', keyboards)
       setKeyboards(keyboards)
     }
   }
-  useEffect(() => getKeyboards(), [connectedAccount])
+  useEffect(getKeyboards, [ethereum, keyboardsContract])
+
+  const addContractEventHandlers = () => {
+    if(keyboardsContract) {
+      keyboardsContract.on('KeyboardCreated', async ({owner}) => {
+        if(!addressesEqual(owner, connectedAccount)) {
+          toast('Somebody just created a keyboard!')
+          await getKeyboards()
+        }
+      });
+
+      keyboardsContract.on('TipSent', (recipient, amount) => {
+        if(addressesEqual(recipient, connectedAccount)) {
+          toast(`You were just tipped ${ethers.utils.formatEther(amount)} eth!`);
+        }
+      });
+    }
+  }
+
+  useEffect(addContractEventHandlers, [keyboardsContract])
 
   const renderKeyboards = () => {
     if (!ethereum) {
@@ -49,9 +71,10 @@ export default function Home() {
               <div key={i} className="relative">
                 <Keyboard kind={kind} isPBT={isPBT} filter={filter} />
                 <span className="absolute top-1 right-6">
-                  {owner.toUpperCase() === connectedAccount.toUpperCase() ?
+                  {addressesEqual(owner, connectedAccount) ?
                     <UserCircleIcon className="h-5 w-5 text-indigo-100" /> :
-                    <TipButton ethereum={ethereum} connectedAccount={connectedAccount} index={i} />}
+                    <TipButton ethereum={ethereum} connectedAccount={connectedAccount} index={i} />
+                  }
                 </span>
               </div>
             )

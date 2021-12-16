@@ -8,6 +8,7 @@ export default function useEthereum() {
     if (accounts.length > 0) {
       const account = accounts[0];
       console.log('We have an authorized account: ', account);
+      console.log("useEthereum: setting connected account to: ", account);
       setConnectedAccount(account);
     } else {
       console.log("No authorized accounts yet")
