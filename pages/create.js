@@ -4,6 +4,7 @@ import Keyboard from "../components/keyboard";
 import PrimaryButton from "../components/primary-button";
 import { contractAddress } from "../utils/contractAddress";
 import abi from "../utils/Keyboards.json"
+import Router from 'next/router'
 
 export default function Create() {
 
@@ -69,6 +70,8 @@ export default function Create() {
     await createTxn.wait();
     setMining(false);
     console.log('Created keyboard!', createTxn.hash);
+
+    Router.push('/')
   }
 
   const renderCreateForm = () => {
