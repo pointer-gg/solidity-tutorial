@@ -25,6 +25,11 @@ contract Keyboards {
     Keyboard keyboard
   );
 
+  event TipSent(
+    address recipient,
+    uint256 amount
+  );
+
   function create(
     KeyboardKind _kind,
     bool _isPBT,
@@ -41,8 +46,10 @@ contract Keyboards {
     emit KeyboardCreated(newKeyboard);
   }
 
-  function tip(address payable _owner) external payable  {
-    _owner.transfer(msg.value);
+  function tip(uint256 _index) external payable  {
+    address payable owner = payable(createdKeyboards[_index].owner);
+    owner.transfer(msg.value);
+    emit TipSent(owner, msg.value);
   }
 
   function getKeyboards() view public returns (Keyboard[] memory) {
