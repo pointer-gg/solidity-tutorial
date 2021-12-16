@@ -4,6 +4,7 @@ import PrimaryButton from "../components/primary-button";
 import Router from 'next/router'
 import useEthereum from "../hooks/useEthereum";
 import useKeyboardsContract from "../hooks/useKeyboardsContract";
+import Footer from "../components/footer";
 
 export default function Create() {
   const { ethereum, connectedAccount, connectAccount } = useEthereum();
@@ -121,17 +122,7 @@ export default function Create() {
 
       </main>
 
-      <footer className='mx-auto mt-48 text-center'>
-        <a
-          href='https://www.pointer.gg?utm_source=stackblitz-solidity'
-          target='_blank'
-          rel='noopener noreferrer'
-        >
-          Learn web3 dev and earn crypto rewards at{" "}
-          <span className=''>Pointer</span>
-        </a>
-        <p>Art from Joanne Li @joanne on Figma <a href='keeybs.com' className='underline'>keeybs.com</a> <a href='https://creativecommons.org/licenses/by/4.0/' className="underline">CC 4.0</a></p>
-      </footer>
+      <Footer />
     </div>
   );
 }
