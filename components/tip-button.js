@@ -29,7 +29,7 @@ export default function TipButton({ethereum, connectedAccount, index}) {
     console.log('Sent tip!', tipTxn.hash);
   }
 
-  return <SecondaryButton onClick={submitTip}>
+  return <SecondaryButton onClick={submitTip} disabled={mining}>
     {mining ? 'Tipping...' : 'Tip 0.01 eth!'}
   </SecondaryButton>
 }

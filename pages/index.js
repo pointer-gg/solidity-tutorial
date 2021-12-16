@@ -6,6 +6,7 @@ import { UserCircleIcon } from "@heroicons/react/solid"
 import { contractAddress } from "../utils/contractAddress";
 import abi from "../utils/Keyboards.json"
 import TipButton from "../components/tip-button";
+import { Router } from "next/router";
 
 export default function Home() {
 
@@ -70,22 +71,32 @@ export default function Home() {
       return <PrimaryButton onClick={connectAccount}>Connect MetaMask Wallet</PrimaryButton>
     }
 
-    // TODO: no keyboards created empty state
-  
+    if (keyboards.length === 0) {
+      return (
+        <div className="flex flex-col gap-4">
+          <PrimaryButton type="link" href="/create">Create a Keyboard!</PrimaryButton>
+          <p>No keyboards yet!</p>
+        </div>
+      )
+    }
+
     return (
-      <div className="grid grid-cols-2 gap-2">
-        {keyboards.map(
-          ([kind, isPBT, filter, owner], i) => (
-            <div key={i} className="relative">
-              <Keyboard kind={kind} isPBT={isPBT} filter={filter} />
-              <span className="absolute top-1 right-6">
-                {owner.toUpperCase() === connectedAccount.toUpperCase() ? 
-                <UserCircleIcon className="h-5 w-5 text-indigo-100" /> : 
-                <TipButton ethereum={ethereum} connectedAccount={connectedAccount} index={i} />}
-              </span>
-            </div>
-          )
-        )}
+      <div className="flex flex-col gap-4">
+        <PrimaryButton type="link" href="/create">Create a Keyboard!</PrimaryButton>
+        <div className="grid grid-cols-2 gap-2">
+          {keyboards.map(
+            ([kind, isPBT, filter, owner], i) => (
+              <div key={i} className="relative">
+                <Keyboard kind={kind} isPBT={isPBT} filter={filter} />
+                <span className="absolute top-1 right-6">
+                  {owner.toUpperCase() === connectedAccount.toUpperCase() ?
+                    <UserCircleIcon className="h-5 w-5 text-indigo-100" /> :
+                    <TipButton ethereum={ethereum} connectedAccount={connectedAccount} index={i} />}
+                </span>
+              </div>
+            )
+          )}
+        </div>
       </div>
     )
   }
