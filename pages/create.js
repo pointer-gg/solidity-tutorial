@@ -2,6 +2,7 @@ import { ethers } from "ethers";
 import { useState, useEffect } from "react";
 import Keyboard from "../components/keyboard";
 import PrimaryButton from "../components/primary-button";
+import { contractAddress } from "../utils/contractAddress";
 import abi from "../utils/Keyboards.json"
 
 export default function Create() {
@@ -15,7 +16,6 @@ export default function Create() {
 
   const [mining, setMining] = useState(false)
 
-  const contractAddress = '0x836024BbaF7cB4Acd576D404BC8D957468a539E3';
   const contractABI = abi.abi;
 
   const handleAccounts = (accounts) => {

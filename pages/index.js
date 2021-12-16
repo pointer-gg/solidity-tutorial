@@ -2,7 +2,10 @@ import { ethers } from "ethers";
 import { useState, useEffect } from "react";
 import Keyboard from "../components/keyboard";
 import PrimaryButton from "../components/primary-button";
+import { UserCircleIcon } from "@heroicons/react/solid"
+import { contractAddress } from "../utils/contractAddress";
 import abi from "../utils/Keyboards.json"
+import TipButton from "../components/tip-button";
 
 export default function Home() {
 
@@ -10,7 +13,6 @@ export default function Home() {
   const [connectedAccount, setConnectedAccount] = useState(undefined);
   const [keyboards, setKeyboards] = useState([])
 
-  const contractAddress = '0x836024BbaF7cB4Acd576D404BC8D957468a539E3';
   const contractABI = abi.abi;
 
   const handleAccounts = (accounts) => {
@@ -68,11 +70,20 @@ export default function Home() {
       return <PrimaryButton onClick={connectAccount}>Connect MetaMask Wallet</PrimaryButton>
     }
 
+    // TODO: no keyboards created empty state
+  
     return (
       <div className="grid grid-cols-2 gap-2">
         {keyboards.map(
           ([kind, isPBT, filter, owner], i) => (
-            <Keyboard key={i} kind={kind} isPBT={isPBT} filter={filter} />
+            <div key={i} className="relative">
+              <Keyboard kind={kind} isPBT={isPBT} filter={filter} />
+              <span className="absolute top-1 right-6">
+                {owner.toUpperCase() === connectedAccount.toUpperCase() ? 
+                <UserCircleIcon className="h-5 w-5 text-indigo-100" /> : 
+                <TipButton ethereum={ethereum} connectedAccount={connectedAccount} index={i} />}
+              </span>
+            </div>
           )
         )}
       </div>
@@ -85,13 +96,8 @@ export default function Home() {
         <h1 className='mt-48 text-4xl'>
           Solidity Keyboard Generator
         </h1>
-        {/* <img
-          className='h-64 mx-auto mt-8'
-          src='keyboards/eighty-percent/ABS.png'
-        /> */}
 
         {renderKeyboards()}
-
       </main>
 
       <footer className='mx-auto mt-48 text-center'>
