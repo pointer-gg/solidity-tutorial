@@ -1,66 +1,26 @@
-import { ethers } from "ethers";
 import { useState, useEffect } from "react";
 import Keyboard from "../components/keyboard";
 import PrimaryButton from "../components/primary-button";
 import { UserCircleIcon } from "@heroicons/react/solid"
-import { contractAddress } from "../utils/contractAddress";
-import abi from "../utils/Keyboards.json"
 import TipButton from "../components/tip-button";
-import { Router } from "next/router";
+import getKeyboardsContract from "../utils/getKeyboardsContract";
+import { useMetaMaskAccount } from "../components/meta-mask-account-provider";
 
 export default function Home() {
+  const { ethereum, connectedAccount, connectAccount } = useMetaMaskAccount();
+  const keyboardsContract = getKeyboardsContract(ethereum);
 
-  const [ethereum, setEthereum] = useState(undefined);
-  const [connectedAccount, setConnectedAccount] = useState(undefined);
   const [keyboards, setKeyboards] = useState([])
 
-  const contractABI = abi.abi;
-
-  const handleAccounts = (accounts) => {
-    if (accounts.length > 0) {
-      const account = accounts[0];
-      console.log('We have an authorized account: ', account);
-      setConnectedAccount(account);
-    } else {
-      console.log("No authorized accounts yet")
-    }
-  };
-
-  const getConnectedAccount = async () => {
-    if (window.ethereum) {
-      setEthereum(window.ethereum);
-    }
-
-    if (ethereum) {
-      const accounts = await ethereum.request({ method: 'eth_accounts' });
-      handleAccounts(accounts);
-    }
-  };
-  useEffect(() => getConnectedAccount(), []);
-
-  const connectAccount = async () => {
-    if (!ethereum) {
-      console.error('Ethereum object is required to connect an account');
-      return;
-    }
-
-    const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
-    handleAccounts(accounts);
-  };
-
   const getKeyboards = async () => {
-    if (ethereum && connectedAccount) {
-      const provider = new ethers.providers.Web3Provider(ethereum);
-      const signer = provider.getSigner();
-      const keyboardsContract = new ethers.Contract(contractAddress, contractABI, signer);
-
+    if (keyboardsContract && connectedAccount) {
+      console.log('Retrieving keyboards from contract...')
       const keyboards = await keyboardsContract.getKeyboards();
-      console.log('Retrieved keyboards...', keyboards)
+      console.log('Retrieved keyboards', keyboards)
       setKeyboards(keyboards)
     }
   }
-
-  useEffect(() => getKeyboards(), [connectedAccount])
+  useEffect(() => getKeyboards(), [!!keyboardsContract, connectedAccount])
 
   const renderKeyboards = () => {
     if (!ethereum) {
@@ -91,7 +51,7 @@ export default function Home() {
                 <span className="absolute top-1 right-6">
                   {owner.toUpperCase() === connectedAccount.toUpperCase() ?
                     <UserCircleIcon className="h-5 w-5 text-indigo-100" /> :
-                    <TipButton ethereum={ethereum} connectedAccount={connectedAccount} index={i} />}
+                    <TipButton keyboardsContract={keyboardsContract} index={i} />}
                 </span>
               </div>
             )
