@@ -6,12 +6,38 @@ import TipButton from "../components/tip-button";
 import getKeyboardsContract from "../utils/getKeyboardsContract";
 import { useMetaMaskAccount } from "../components/meta-mask-account-provider";
 import Footer from "../components/footer";
+import addressesEqual from "../utils/addressesEqual";
+import { toast } from "react-hot-toast"
+import { ethers } from "ethers";
+import SecondaryButton from "../components/secondary-button";
 
 export default function Home() {
   const { ethereum, connectedAccount, connectAccount } = useMetaMaskAccount();
+  const [keyboards, setKeyboards] = useState([])
+
   const keyboardsContract = getKeyboardsContract(ethereum);
 
-  const [keyboards, setKeyboards] = useState([])
+  // add event handlers
+  const addContractEventHandlers = () => {
+    keyboardsContract?.removeAllListeners();
+
+    if(keyboardsContract && connectedAccount) {
+      keyboardsContract.on('TipSent', (recipient, amount) => {
+        if(addressesEqual(recipient, connectedAccount)) {
+          toast(`You received a tip of ${ethers.utils.formatEther(amount)} eth!`);
+        }
+      })
+
+      keyboardsContract.on('KeyboardCreated', async (keyboard) => {
+        if(connectedAccount && !addressesEqual(keyboard.owner, connectedAccount)) {
+          toast('Somebody created a new keyboard!')
+          await getKeyboards();
+        }
+      })
+    }
+  }
+  useEffect(addContractEventHandlers, [!!keyboardsContract, connectedAccount]);
+
 
   const getKeyboards = async () => {
     if (keyboardsContract && connectedAccount) {
@@ -50,9 +76,10 @@ export default function Home() {
               <div key={i} className="relative">
                 <Keyboard kind={kind} isPBT={isPBT} filter={filter} />
                 <span className="absolute top-1 right-6">
-                  {owner.toUpperCase() === connectedAccount.toUpperCase() ?
+                  {addressesEqual(owner, connectedAccount) ?
                     <UserCircleIcon className="h-5 w-5 text-indigo-100" /> :
-                    <TipButton keyboardsContract={keyboardsContract} index={i} />}
+                    <TipButton keyboardsContract={keyboardsContract} index={i} />
+                  }
                 </span>
               </div>
             )
