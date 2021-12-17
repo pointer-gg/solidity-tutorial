@@ -1,66 +1,53 @@
-import { ethers } from "ethers";
 import { useState, useEffect } from "react";
 import Keyboard from "../components/keyboard";
 import PrimaryButton from "../components/primary-button";
 import { UserCircleIcon } from "@heroicons/react/solid"
-import { contractAddress } from "../utils/contractAddress";
-import abi from "../utils/Keyboards.json"
 import TipButton from "../components/tip-button";
-import { Router } from "next/router";
+import getKeyboardsContract from "../utils/getKeyboardsContract";
+import { useMetaMaskAccount } from "../components/meta-mask-account-provider";
+import Footer from "../components/footer";
+import addressesEqual from "../utils/addressesEqual";
+import { toast } from "react-hot-toast"
+import { ethers } from "ethers";
+import SecondaryButton from "../components/secondary-button";
 
 export default function Home() {
-
-  const [ethereum, setEthereum] = useState(undefined);
-  const [connectedAccount, setConnectedAccount] = useState(undefined);
+  const { ethereum, connectedAccount, connectAccount } = useMetaMaskAccount();
   const [keyboards, setKeyboards] = useState([])
 
-  const contractABI = abi.abi;
+  const keyboardsContract = getKeyboardsContract(ethereum);
 
-  const handleAccounts = (accounts) => {
-    if (accounts.length > 0) {
-      const account = accounts[0];
-      console.log('We have an authorized account: ', account);
-      setConnectedAccount(account);
-    } else {
-      console.log("No authorized accounts yet")
+  // add event handlers
+  const addContractEventHandlers = () => {
+    keyboardsContract?.removeAllListeners();
+
+    if(keyboardsContract && connectedAccount) {
+      keyboardsContract.on('TipSent', (recipient, amount) => {
+        if(addressesEqual(recipient, connectedAccount)) {
+          toast(`You received a tip of ${ethers.utils.formatEther(amount)} eth!`);
+        }
+      })
+
+      keyboardsContract.on('KeyboardCreated', async (keyboard) => {
+        if(connectedAccount && !addressesEqual(keyboard.owner, connectedAccount)) {
+          toast('Somebody created a new keyboard!')
+          await getKeyboards();
+        }
+      })
     }
-  };
+  }
+  useEffect(addContractEventHandlers, [!!keyboardsContract, connectedAccount]);
 
-  const getConnectedAccount = async () => {
-    if (window.ethereum) {
-      setEthereum(window.ethereum);
-    }
-
-    if (ethereum) {
-      const accounts = await ethereum.request({ method: 'eth_accounts' });
-      handleAccounts(accounts);
-    }
-  };
-  useEffect(() => getConnectedAccount(), []);
-
-  const connectAccount = async () => {
-    if (!ethereum) {
-      console.error('Ethereum object is required to connect an account');
-      return;
-    }
-
-    const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
-    handleAccounts(accounts);
-  };
 
   const getKeyboards = async () => {
-    if (ethereum && connectedAccount) {
-      const provider = new ethers.providers.Web3Provider(ethereum);
-      const signer = provider.getSigner();
-      const keyboardsContract = new ethers.Contract(contractAddress, contractABI, signer);
-
+    if (keyboardsContract && connectedAccount) {
+      console.log('Retrieving keyboards from contract...')
       const keyboards = await keyboardsContract.getKeyboards();
-      console.log('Retrieved keyboards...', keyboards)
+      console.log('Retrieved keyboards', keyboards)
       setKeyboards(keyboards)
     }
   }
-
-  useEffect(() => getKeyboards(), [connectedAccount])
+  useEffect(() => getKeyboards(), [!!keyboardsContract, connectedAccount])
 
   const renderKeyboards = () => {
     if (!ethereum) {
@@ -89,9 +76,10 @@ export default function Home() {
               <div key={i} className="relative">
                 <Keyboard kind={kind} isPBT={isPBT} filter={filter} />
                 <span className="absolute top-1 right-6">
-                  {owner.toUpperCase() === connectedAccount.toUpperCase() ?
+                  {addressesEqual(owner, connectedAccount) ?
                     <UserCircleIcon className="h-5 w-5 text-indigo-100" /> :
-                    <TipButton ethereum={ethereum} connectedAccount={connectedAccount} index={i} />}
+                    <TipButton keyboardsContract={keyboardsContract} index={i} />
+                  }
                 </span>
               </div>
             )
@@ -110,18 +98,7 @@ export default function Home() {
 
         {renderKeyboards()}
       </main>
-
-      <footer className='mx-auto mt-48 text-center'>
-        <a
-          href='https://www.pointer.gg?utm_source=stackblitz-solidity'
-          target='_blank'
-          rel='noopener noreferrer'
-        >
-          Learn web3 dev and earn crypto rewards at{" "}
-          <span className=''>Pointer</span>
-        </a>
-        <p>Art from Joanne Li @joanne on Figma <a href='keeybs.com' className='underline'>keeybs.com</a> <a href='https://creativecommons.org/licenses/by/4.0/' className="underline">CC 4.0</a></p>
-      </footer>
+      <Footer />
     </div>
   );
 }
