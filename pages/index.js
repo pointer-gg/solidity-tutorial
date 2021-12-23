@@ -102,7 +102,7 @@ export default function Home() {
               <span className="absolute top-1 right-6">
                 {addressesEqual(owner, connectedAccount) ?
                   <UserCircleIcon className="h-5 w-5 text-indigo-100" /> :
-                  <TipButton ethereum={ethereum} index={i} />
+                  <TipButton keyboardsContract={keyboardsContract} index={i} />
                 }
               </span>
             </div>
