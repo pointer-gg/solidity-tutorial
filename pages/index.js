@@ -1,8 +1,11 @@
 import { ethers } from "ethers";
 import { useState, useEffect } from "react";
+import { UserCircleIcon } from "@heroicons/react/solid"
 import PrimaryButton from "../components/primary-button";
 import Keyboard from "../components/keyboard";
 import abi from "../utils/Keyboards.json"
+import addressesEqual from "../utils/addressesEqual";
+import TipButton from "../components/tip-button";
 
 export default function Home() {
   const [ethereum, setEthereum] = useState(undefined);
@@ -77,11 +80,19 @@ export default function Home() {
       <div className="flex flex-col gap-4">
         <PrimaryButton type="link" href="/create">Create a Keyboard!</PrimaryButton>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 p-2">
-          {keyboards.map(
-            ([kind, isPBT, filter], i) => (
-              <Keyboard key={i} kind={kind} isPBT={isPBT} filter={filter} />
-            )
-          )}
+        {keyboards.map(
+          ([kind, isPBT, filter, owner], i) => (
+            <div key={i} className="relative">
+              <Keyboard kind={kind} isPBT={isPBT} filter={filter} />
+              <span className="absolute top-1 right-6">
+                {addressesEqual(owner, connectedAccount) ?
+                  <UserCircleIcon className="h-5 w-5 text-indigo-100" /> :
+                  <TipButton ethereum={ethereum} index={i} />
+                }
+              </span>
+            </div>
+          )
+        )}
         </div>
       </div>
     )
