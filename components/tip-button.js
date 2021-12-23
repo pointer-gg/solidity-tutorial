@@ -5,7 +5,7 @@ import abi from "../utils/Keyboards.json"
 
 
 export default function TipButton({ ethereum, index }) {
-  const contractAddress = '0x297D3fBfF8D755cd12B322028498AF36Bf3A7490';
+  const contractAddress = '0xe3a6ECEA5217D4213964eB734eae0A49BCea6De9';
   const contractABI = abi.abi;
 
   const [mining, setMining] = useState(false)
