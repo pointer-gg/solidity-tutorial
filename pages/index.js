@@ -1,11 +1,12 @@
 import { ethers } from "ethers";
 import { useState, useEffect } from "react";
-import { UserCircleIcon } from "@heroicons/react/solid"
+import { UserCircleIcon } from "@heroicons/react/solid";
+import { toast } from "react-hot-toast";
 import PrimaryButton from "../components/primary-button";
 import Keyboard from "../components/keyboard";
-import abi from "../utils/Keyboards.json"
-import addressesEqual from "../utils/addressesEqual";
 import TipButton from "../components/tip-button";
+import addressesEqual from "../utils/addressesEqual";
+import getKeyboardsContract from "../utils/getKeyboardsContract"
 
 export default function Home() {
   const [ethereum, setEthereum] = useState(undefined);
@@ -13,8 +14,7 @@ export default function Home() {
   const [keyboards, setKeyboards] = useState([]);
   const [keyboardsLoading, setKeyboardsLoading] = useState(false);
 
-  const contractAddress = '0xe3a6ECEA5217D4213964eB734eae0A49BCea6De9';
-  const contractABI = abi.abi;
+  const keyboardsContract = getKeyboardsContract(ethereum);
 
   const handleAccounts = (accounts) => {
     if (accounts.length > 0) {
@@ -49,13 +49,9 @@ export default function Home() {
   };
 
   const getKeyboards = async () => {
-    if (ethereum && connectedAccount) {
+    if (keyboardsContract && connectedAccount) {
       setKeyboardsLoading(true);
       try {
-        const provider = new ethers.providers.Web3Provider(ethereum);
-        const signer = provider.getSigner();
-        const keyboardsContract = new ethers.Contract(contractAddress, contractABI, signer);
-
         const keyboards = await keyboardsContract.getKeyboards();
         console.log('Retrieved keyboards...', keyboards)
 
@@ -65,7 +61,26 @@ export default function Home() {
       }
     }
   }
-  useEffect(() => getKeyboards(), [connectedAccount])
+  useEffect(() => getKeyboards(), [!!keyboardsContract, connectedAccount])
+
+  const addContractEventHandlers = () => {
+    if (keyboardsContract && connectedAccount) {
+      keyboardsContract.on('KeyboardCreated', async (keyboard) => {
+        if (connectedAccount && !addressesEqual(keyboard.owner, connectedAccount)) {
+          toast('Somebody created a new keyboard!', { id: JSON.stringify(keyboard) });
+        }
+        await getKeyboards();
+      })
+
+      keyboardsContract.on('TipSent', (recipient, amount) => {
+        if (addressesEqual(recipient, connectedAccount)) {
+          toast(`You received a tip of ${ethers.utils.formatEther(amount)} eth!`);
+        }
+      })
+    }
+  }
+  useEffect(addContractEventHandlers, [!!keyboardsContract, connectedAccount]);
+
 
   if (!ethereum) {
     return <p>Please install MetaMask to connect to this site</p>
