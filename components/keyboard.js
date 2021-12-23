@@ -9,6 +9,10 @@ export default function Keyboard({kind, isPBT, filter}) {
   const fileName = isPBT ? 'PBT' : 'ABS'
 
   const imagePath = `keyboards/${kindDir}/${fileName}.png`;
+  const alt = `${kindDir} keyboard with ${isPBT? "PBT" : "ABS"} keys ${filter? `with ${filter}` : ""}`;
 
-  return <img className={"h-[230px] w-[360px] rounded-lg p-2 border border-slate-400 " + filter} src={imagePath} />
-}
+  return (
+    <div className="rounded-lg p-2 border border-white">
+      <img className={"h-[230px] w-[360px] " + filter} src={imagePath} alt={alt} />
+    </div>
+  )}
